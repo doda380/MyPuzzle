@@ -1,0 +1,21 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# IDEs
+.idea/
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Generated platform folders can be recreated with flutter create .
+ios/
+linux/
+macos/
+web/
+windows/
