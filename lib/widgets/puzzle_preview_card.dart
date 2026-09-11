@@ -1,7 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
+import '../models/selected_image.dart';
+
 class PuzzlePreviewCard extends StatelessWidget {
-  const PuzzlePreviewCard({super.key});
+  const PuzzlePreviewCard({
+    this.selectedImage,
+    super.key,
+  });
+
+  final SelectedImage? selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -14,10 +23,50 @@ class PuzzlePreviewCard extends StatelessWidget {
             border: Border.all(color: Colors.white, width: 2),
             borderRadius: BorderRadius.circular(24),
           ),
-          child: CustomPaint(
-            painter: _ScenicPuzzlePainter(),
-            child: const SizedBox.expand(),
-          ),
+          child: selectedImage == null
+              ? CustomPaint(
+                  painter: _ScenicPuzzlePainter(),
+                  child: const SizedBox.expand(),
+                )
+              : Image.file(
+                  File(selectedImage!.path),
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const _ImagePreviewError();
+                  },
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImagePreviewError extends StatelessWidget {
+  const _ImagePreviewError();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xCC1A1A2E),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.image_not_supported_rounded,
+              color: Colors.white,
+              size: 40,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Could not load image',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );

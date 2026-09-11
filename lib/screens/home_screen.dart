@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
+import '../models/puzzle.dart';
 import '../models/selected_image.dart';
 import '../repositories/image_repository.dart';
 import '../services/image_picker_service.dart';
+import '../services/puzzle_tile_service.dart';
 import '../widgets/home_action_card.dart';
 import '../widgets/home_bottom_navigation.dart';
 import '../widgets/puzzle_preview_card.dart';
 import '../widgets/recent_puzzles_panel.dart';
+import 'puzzle_grid_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,8 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final ImageRepository _imageRepository = ImagePickerRepository(
     ImagePickerService(),
   );
+  final PuzzleTileService _puzzleTileService = const PuzzleTileService();
 
   SelectedImage? _selectedImage;
+  Puzzle? _puzzle;
   bool _isPickingImage = false;
 
   Future<void> _pickImageFromGallery() async {
@@ -42,11 +47,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _selectedImage = selectedImage;
+        _puzzle = selectedImage == null
+            ? null
+            : _puzzleTileService.buildPuzzle(selectedImage);
       });
 
-      final message = _selectedImage == null
+      final message = _puzzle == null
           ? 'No image selected.'
-          : 'Selected ${_selectedImage!.name}. Preview comes next.';
+          : 'Image prepared as ${_puzzle!.tileCount} tiles.';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -68,6 +76,17 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
+  }
+
+  void _openPuzzleGrid() {
+    final puzzle = _puzzle;
+    if (puzzle == null) {
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PuzzleGridScreen(puzzle: puzzle)),
+    );
   }
 
   @override
@@ -105,7 +124,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 22),
                           const _Tagline(),
                           const SizedBox(height: 28),
-                          const PuzzlePreviewCard(),
+                          PuzzlePreviewCard(selectedImage: _selectedImage),
+                          if (_puzzle != null) ...[
+                            const SizedBox(height: 16),
+                            _ViewPuzzleGridButton(onPressed: _openPuzzleGrid),
+                          ],
                           const SizedBox(height: 24),
                           _ActionCards(
                             isPickingImage: _isPickingImage,
@@ -277,6 +300,38 @@ class _Tagline extends StatelessWidget {
             fontWeight: FontWeight.w900,
             height: 1.25,
           ),
+    );
+  }
+}
+
+class _ViewPuzzleGridButton extends StatelessWidget {
+  const _ViewPuzzleGridButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0x443B82F6),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        onPressed: onPressed,
+        icon: const Icon(Icons.grid_view_rounded),
+        label: Text(
+          'View Puzzle Grid',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
     );
   }
 }
