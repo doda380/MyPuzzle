@@ -14,30 +14,27 @@ class PuzzlePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1.56,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white, width: 2),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: selectedImage == null
-              ? CustomPaint(
-                  painter: _ScenicPuzzlePainter(),
-                  child: const SizedBox.expand(),
-                )
-              : Image.file(
-                  File(selectedImage!.path),
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const _ImagePreviewError();
-                  },
-                ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.white, width: 2),
+          borderRadius: BorderRadius.circular(24),
         ),
+        child: selectedImage == null
+            ? CustomPaint(
+                painter: _ScenicPuzzlePainter(),
+                child: const SizedBox.expand(),
+              )
+            : Image.file(
+                File(selectedImage!.path),
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const _ImagePreviewError();
+                },
+              ),
       ),
     );
   }
@@ -63,8 +60,8 @@ class _ImagePreviewError extends StatelessWidget {
             Text(
               'Could not load image',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-              ),
+                    color: Colors.white,
+                  ),
             ),
           ],
         ),

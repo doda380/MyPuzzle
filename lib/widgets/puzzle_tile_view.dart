@@ -29,24 +29,17 @@ class PuzzleTileView extends StatelessWidget {
 
         return ClipRect(
           child: OverflowBox(
+            alignment: Alignment(_axisAlignment(column), _axisAlignment(row)),
+            minWidth: tileWidth * gridSize,
             maxWidth: tileWidth * gridSize,
+            minHeight: tileHeight * gridSize,
             maxHeight: tileHeight * gridSize,
-            child: Align(
-              alignment: Alignment(
-                _axisAlignment(column),
-                _axisAlignment(row),
-              ),
-              child: SizedBox(
-                width: tileWidth * gridSize,
-                height: tileHeight * gridSize,
-                child: Image.file(
-                  File(imagePath),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const ColoredBox(color: Color(0xFF1A1A2E));
-                  },
-                ),
-              ),
+            child: Image.file(
+              File(imagePath),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const ColoredBox(color: Color(0xFF1A1A2E));
+              },
             ),
           ),
         );

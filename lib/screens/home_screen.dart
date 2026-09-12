@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
-import '../models/puzzle.dart';
 import '../models/selected_image.dart';
 import '../repositories/image_repository.dart';
 import '../services/image_picker_service.dart';
-import '../services/puzzle_tile_service.dart';
 import '../widgets/home_action_card.dart';
 import '../widgets/home_bottom_navigation.dart';
 import '../widgets/puzzle_preview_card.dart';
-import '../widgets/recent_puzzles_panel.dart';
+import 'difficulty_screen.dart';
 import 'puzzle_grid_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -23,11 +21,20 @@ class _HomeScreenState extends State<HomeScreen> {
   final ImageRepository _imageRepository = ImagePickerRepository(
     ImagePickerService(),
   );
-  final PuzzleTileService _puzzleTileService = const PuzzleTileService();
 
   SelectedImage? _selectedImage;
-  Puzzle? _puzzle;
   bool _isPickingImage = false;
+
+  /// Persists across every puzzle played this session: it is never reset
+  /// when a new puzzle starts, only spent on hints and rewarded (+1, no
+  /// upper limit) when a puzzle is solved.
+  int _hintsRemaining = PuzzleGridScreen.startingHints;
+
+  void _updateHints(int hintsRemaining) {
+    setState(() {
+      _hintsRemaining = hintsRemaining;
+    });
+  }
 
   Future<void> _pickImageFromGallery() async {
     if (_isPickingImage) {
@@ -47,17 +54,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _selectedImage = selectedImage;
-        _puzzle = selectedImage == null
-            ? null
-            : _puzzleTileService.buildPuzzle(selectedImage);
       });
 
-      final message = _puzzle == null
-          ? 'No image selected.'
-          : 'Image prepared as ${_puzzle!.tileCount} tiles.';
+      if (selectedImage == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No image selected.')),
+        );
+        return;
+      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => DifficultyScreen(
+            selectedImage: selectedImage,
+            hintsRemaining: _hintsRemaining,
+            onHintsChanged: _updateHints,
+          ),
+        ),
       );
     } catch (_) {
       if (!mounted) {
@@ -76,17 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
-  }
-
-  void _openPuzzleGrid() {
-    final puzzle = _puzzle;
-    if (puzzle == null) {
-      return;
-    }
-
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => PuzzleGridScreen(puzzle: puzzle)),
-    );
   }
 
   @override
@@ -115,30 +117,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   Center(
                     child: SizedBox(
                       width: contentWidth,
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                        children: [
-                          const _TopBar(),
-                          const SizedBox(height: 12),
-                          const _HomeTitle(),
-                          const SizedBox(height: 22),
-                          const _Tagline(),
-                          const SizedBox(height: 28),
-                          PuzzlePreviewCard(selectedImage: _selectedImage),
-                          if (_puzzle != null) ...[
-                            const SizedBox(height: 16),
-                            _ViewPuzzleGridButton(onPressed: _openPuzzleGrid),
+                      height: constraints.maxHeight,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                        child: Column(
+                          children: [
+                            const _TopBar(),
+                            const SizedBox(height: 8),
+                            const _HomeTitle(),
+                            const SizedBox(height: 8),
+                            const _Tagline(),
+                            const SizedBox(height: 12),
+                            Expanded(
+                              flex: 5,
+                              child: PuzzlePreviewCard(
+                                selectedImage: _selectedImage,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Expanded(
+                              flex: 4,
+                              child: _ActionCards(
+                                isPickingImage: _isPickingImage,
+                                onGalleryPressed: _pickImageFromGallery,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const HomeBottomNavigation(),
                           ],
-                          const SizedBox(height: 24),
-                          _ActionCards(
-                            isPickingImage: _isPickingImage,
-                            onGalleryPressed: _pickImageFromGallery,
-                          ),
-                          const SizedBox(height: 24),
-                          const RecentPuzzlesPanel(),
-                          const SizedBox(height: 24),
-                          const HomeBottomNavigation(),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -304,38 +311,6 @@ class _Tagline extends StatelessWidget {
   }
 }
 
-class _ViewPuzzleGridButton extends StatelessWidget {
-  const _ViewPuzzleGridButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: const Color(0x443B82F6),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        onPressed: onPressed,
-        icon: const Icon(Icons.grid_view_rounded),
-        label: Text(
-          'View Puzzle Grid',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ActionCards extends StatelessWidget {
   const _ActionCards({
     required this.isPickingImage,
@@ -348,6 +323,7 @@ class _ActionCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           child: HomeActionCard(

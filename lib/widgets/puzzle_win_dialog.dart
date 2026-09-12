@@ -23,7 +23,7 @@ class PuzzleWinDialog extends StatelessWidget {
         size: 48,
       ),
       title: Text(
-        'Puzzle Solved!',
+        '🎉 Puzzle Solved!',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
           color: Colors.white,
@@ -31,7 +31,7 @@ class PuzzleWinDialog extends StatelessWidget {
         ),
       ),
       content: Text(
-        'Great job! Every piece is in the right place.',
+        'Great job!',
         textAlign: TextAlign.center,
         style: Theme.of(
           context,
@@ -42,7 +42,7 @@ class PuzzleWinDialog extends StatelessWidget {
         TextButton(
           onPressed: onBackToHome,
           style: TextButton.styleFrom(foregroundColor: AppColors.textMuted),
-          child: const Text('Back to Home'),
+          child: const Text('Back'),
         ),
         FilledButton(
           onPressed: onPlayAgain,
